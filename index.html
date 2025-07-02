@@ -28,13 +28,11 @@
       background-color: #f4f4f9;
       color: #111;
     }
-
     .container {
       max-width: 900px;
       margin: 30px auto;
       padding: 20px;
     }
-
     .email-box {
       background: rgba(25, 25, 25, 0.9);
       color: #fff;
@@ -44,32 +42,14 @@
       backdrop-filter: blur(6px);
       transition: all 0.3s ease;
     }
-
     .email-box:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-
-    h3, h4 {
-      color: #ffffff;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-    }
-
-    a {
-      color: #80d0ff;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    .loader {
-      display: flex;
-      justify-content: center;
-      margin: 20px 0;
-    }
-
+    h3, h4 { color: #ffffff; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+    a { color: #80d0ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .loader { display: flex; justify-content: center; margin: 20px 0; }
     .spinner {
       width: 40px;
       height: 40px;
@@ -78,26 +58,28 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
     footer {
       text-align: center;
       padding: 40px 0;
       font-size: 14px;
       color: #777;
     }
-
-    .fade-in {
-      animation: fadeIn 1s ease-in;
-    }
-
+    .fade-in { animation: fadeIn 1s ease-in; }
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
+    }
+    .btn-copy {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -107,7 +89,20 @@
       <img src="logo.png" alt="TempMail Pro Logo" style="max-width: 180px; border-radius: 12px;" />
     </div>
 
-    <!-- Email generator & inbox here (left unchanged for now) -->
+    <!-- Email Section -->
+    <section class="email-box">
+      <div class="text-center">
+        <h4>Your Temporary Email Address</h4>
+        <div class="input-group mt-3">
+          <input id="emailDisplay" class="form-control" readonly>
+          <button class="btn-copy" onclick="copyEmail()">Copy</button>
+        </div>
+      </div>
+      <div class="mt-4">
+        <h5>Inbox</h5>
+        <div id="emailList"></div>
+      </div>
+    </section>
 
     <!-- SEO Content Section -->
     <section class="email-box mt-5">
@@ -122,13 +117,11 @@
       </ul>
     </section>
 
-    <!-- More SEO Content -->
     <section class="email-box mt-4">
       <h4 class="text-center">What is Disposable Temporary E-mail?</h4>
       <p class="mt-3">Disposable email is a temporary email service that self-destructs after a period of time. It allows users to receive email at a temporary address without revealing their identity. It's useful for sign-ups, downloads, or any interaction where you want to stay anonymous and protect your real inbox.</p>
     </section>
 
-    <!-- Popular Articles Section -->
     <section class="email-box mt-4">
       <h4 class="text-center">Popular Articles</h4>
       <ul class="mt-3">
@@ -140,7 +133,6 @@
       </ul>
     </section>
 
-    <!-- More Information Section -->
     <section class="email-box mt-4">
       <h4 class="text-center">More About TempMail Pro</h4>
       <p class="mt-3">TempMail Pro is built for speed, privacy, and simplicity. Unlike fake email generators, our service connects to real-time email servers so you can receive emails instantly. We don’t store your data, and no login is ever required.</p>
@@ -151,5 +143,60 @@
       <p>Stay spam-free and protect your privacy with fast, disposable email addresses.</p>
     </footer>
   </div>
+
+  <!-- Script -->
+  <script>
+    let email = '';
+    let domain = '';
+
+    function generateEmail() {
+      fetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1')
+        .then(res => res.json())
+        .then(data => {
+          email = data[0];
+          domain = email.split('@')[1];
+          document.getElementById('emailDisplay').value = email;
+          fetchInbox();
+        });
+    }
+
+    function fetchInbox() {
+      const login = email.split('@')[0];
+      fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`)
+        .then(res => res.json())
+        .then(messages => {
+          const emailList = document.getElementById('emailList');
+          emailList.innerHTML = '';
+          messages.forEach(msg => {
+            const div = document.createElement('div');
+            div.className = 'mt-2';
+            div.innerHTML = `<strong>${msg.from}</strong> - ${msg.subject}`;
+            div.style.cursor = 'pointer';
+            div.onclick = () => readEmail(msg.id);
+            emailList.appendChild(div);
+          });
+        });
+    }
+
+    function readEmail(id) {
+      const login = email.split('@')[0];
+      fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${id}`)
+        .then(res => res.json())
+        .then(msg => {
+          alert(`From: ${msg.from}\nSubject: ${msg.subject}\n\n${msg.textBody}`);
+        });
+    }
+
+    function copyEmail() {
+      const input = document.getElementById('emailDisplay');
+      input.select();
+      input.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      alert('Email copied!');
+    }
+
+    generateEmail();
+    setInterval(fetchInbox, 15000);
+  </script>
 </body>
 </html>
