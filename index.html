@@ -2,186 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="TempMail Pro - Secure, free, and instant temporary email address. Disposable email for privacy and protection.">
-  <meta name="keywords" content="temp mail, temporary email, disposable email, free email, anonymous email, 1secmail API">
-  <meta name="author" content="TempMail Pro">
-  <title>TempMail Pro — Free Disposable Email</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TempMail Pro - Free Temporary Email</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      background: #f4f6f8;
-      color: #333;
-    }
-    header {
-      background: #1f2937;
-      color: white;
-      padding: 20px 0;
-      text-align: center;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-    }
-    .hero {
-      padding: 40px 20px;
-      text-align: center;
-      background: linear-gradient(to right, #0073e6, #00aaff);
-      color: white;
-    }
-    .hero h2 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-    .hero p {
-      font-size: 1.1rem;
-      max-width: 700px;
-      margin: auto;
-    }
-    .main-container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    body.dark-mode {
+      background-color: #121212;
+      color: #ffffff;
     }
     .email-box {
-      background: #f0f0f0;
-      padding: 15px 20px;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .email-box code {
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-    .btn-group {
       display: flex;
       gap: 10px;
-      margin-bottom: 30px;
+      align-items: center;
     }
-    button {
-      background: #0073e6;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    button:hover {
-      background: #005bb5;
-    }
-    h3 {
-      margin-bottom: 15px;
-    }
-    .message-list {
-      list-style: none;
-      padding: 0;
-    }
-    .message {
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      background: #f9f9f9;
-    }
-    .message strong { display: block; margin-bottom: 5px; }
-    .ad-placeholder {
-      background: #e0e7ff;
-      padding: 10px;
-      margin-top: 30px;
-      text-align: center;
-      font-size: 0.9rem;
-      color: #333;
-      border: 2px dashed #94a3b8;
-      border-radius: 8px;
-    }
-    footer {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #888;
-      margin-top: 60px;
-      padding: 20px;
+    .qr-code {
+      margin-top: 15px;
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>TempMail Pro</h1>
-  </header>
-  <section class="hero">
-    <h2>Free Temporary Email Generator</h2>
-    <p>Protect your inbox and stay anonymous online. Instantly get a temporary email that lasts for hours, ideal for signups, testing, and privacy.</p>
-  </section>
-  <div class="main-container">
-    <div class="email-box">
-      <span>Your Temp Email:</span>
-      <code id="email">Loading...</code>
-    </div>
-    <div class="btn-group">
-      <button onclick="copyEmail()">📋 Copy</button>
-      <button onclick="refreshMessages()">🔄 Refresh Inbox</button>
-    </div>
-    <h3>Inbox</h3>
-    <ul id="inbox" class="message-list"></ul>
+<body class="p-4">
 
-    <div class="ad-placeholder">
-      🔒 Your Ad Here — Great space for Google AdSense or Affiliate Banners!
-    </div>
+  <div class="d-flex justify-content-between align-items-center">
+    <h1>📧 TempMail Pro</h1>
+    <button onclick="toggleDarkMode()" class="btn btn-outline-secondary">🌓 Toggle Dark Mode</button>
   </div>
-  <footer>&copy; 2025 TempMail Pro. All rights reserved.</footer>
 
+  <hr>
+
+  <!-- Temp Email Section -->
+  <div class="email-box my-3">
+    <input type="text" id="emailAddress" class="form-control" readonly />
+    <button onclick="copyEmail()" class="btn btn-primary">📋 Copy</button>
+    <button onclick="generateQRCode()" class="btn btn-info">🔳 QR</button>
+  </div>
+
+  <div id="qrContainer" class="qr-code"></div>
+
+  <!-- Inbox Section -->
+  <h4>📥 Inbox</h4>
+  <div id="loader" class="text-muted">Loading inbox...</div>
+  <ul id="inboxList" class="list-group"></ul>
+
+  <audio id="notifSound" src="https://notificationsounds.com/storage/sounds/file-sounds-1162-pristine.mp3"></audio>
+
+  <!-- Scripts -->
   <script>
-    const login = 'user' + Math.floor(Math.random() * 10000);
-    const domain = '1secmail.com';
-    const email = `${login}@${domain}`;
-    document.getElementById('email').innerText = email;
+    const domain = "1secmail.com";
+    let emailName = "";
+    let prevMessageIds = [];
+
+    function generateRandomEmail() {
+      emailName = "tempmail_" + Math.floor(Math.random() * 100000);
+      const email = `${emailName}@${domain}`;
+      document.getElementById("emailAddress").value = email;
+    }
 
     function copyEmail() {
-      navigator.clipboard.writeText(email).then(() => alert('Email copied to clipboard!'));
+      const input = document.getElementById("emailAddress");
+      input.select();
+      document.execCommand("copy");
+      alert("Copied to clipboard!");
     }
 
-    function refreshMessages() {
-      fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`)
-        .then(res => res.json())
-        .then(data => {
-          const inbox = document.getElementById('inbox');
-          inbox.innerHTML = '';
-          if (data.length === 0) {
-            inbox.innerHTML = '<li>No messages received yet.</li>';
-            return;
-          }
-          data.forEach(msg => {
-            const li = document.createElement('li');
-            li.className = 'message';
-            li.innerHTML = `
-              <strong>From:</strong> ${msg.from}<br>
-              <strong>Subject:</strong> ${msg.subject}<br>
-              <button onclick="readMessage(${msg.id})">📖 Read</button>
-            `;
-            inbox.appendChild(li);
-          });
-        });
+    function generateQRCode() {
+      const email = document.getElementById("emailAddress").value;
+      QRCode.toCanvas(email, { width: 150 }, (err, canvas) => {
+        const container = document.getElementById("qrContainer");
+        container.innerHTML = ""; // clear previous
+        container.appendChild(canvas);
+      });
     }
 
-    function readMessage(id) {
-      fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${id}`)
-        .then(res => res.json())
-        .then(data => {
-          alert(\`📧 Subject: \${data.subject}\\nFrom: \${data.from}\\n\\n\${data.textBody}\`);
-        });
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
     }
 
-    refreshMessages();
+    async function fetchInbox() {
+      const url = `https://www.1secmail.com/api/v1/?action=getMessages&login=${emailName}&domain=${domain}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const inboxList = document.getElementById("inboxList");
+      inboxList.innerHTML = ""; // Clear inbox
+      document.getElementById("loader").style.display = data.length ? "none" : "block";
+
+      const newIds = data.map(msg => msg.id);
+      const hasNew = newIds.some(id => !prevMessageIds.includes(id));
+      if (hasNew && prevMessageIds.length) {
+        document.getElementById("notifSound").play();
+      }
+      prevMessageIds = newIds;
+
+      data.forEach(msg => {
+        const li = document.createElement("li");
+        li.className = "list-group-item";
+        li.innerHTML = `<strong>${msg.from}</strong>: ${msg.subject}`;
+        li.onclick = () => viewEmail(msg.id);
+        inboxList.appendChild(li);
+      });
+    }
+
+    async function viewEmail(id) {
+      const url = `https://www.1secmail.com/api/v1/?action=readMessage&login=${emailName}&domain=${domain}&id=${id}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      alert(`From: ${data.from}\nSubject: ${data.subject}\n\n${data.textBody || data.body}`);
+    }
+
+    function startAutoRefresh() {
+      fetchInbox();
+      setInterval(fetchInbox, 10000); // every 10 seconds
+    }
+
+    // Init
+    generateRandomEmail();
+    startAutoRefresh();
   </script>
 </body>
 </html>
