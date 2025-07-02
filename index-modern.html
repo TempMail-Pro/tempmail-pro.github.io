@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Generate a free temporary email instantly. Private, disposable, and fast inbox powered by 1secmail.">
+  <meta name="keywords" content="temp mail, temporary email, disposable email, free email service, mail API">
+  <meta name="author" content="TempMail Pro">
+  <title>TempMail Pro — Free Temporary Email</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f2f5;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+    header {
+      background: #0073e6;
+      width: 100%;
+      padding: 20px 0;
+      text-align: center;
+      color: white;
+    }
+    header h1 { margin: 0; font-size: 2rem; }
+    .container {
+      background: #fff;
+      margin-top: 30px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 600px;
+    }
+    .email-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f4f6f9;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      word-break: break-all;
+    }
+    button {
+      background: #0073e6;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      margin-right: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    button:hover {
+      background: #005bb5;
+    }
+    .button-group { margin-bottom: 20px; }
+    .message-list { list-style: none; padding: 0; }
+    .message { padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; background: #f9f9f9; }
+    .message strong { display: block; }
+    footer {
+      margin-top: auto;
+      padding: 15px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📬 TempMail Pro</h1>
+    <p>Get your free disposable email instantly</p>
+  </header>
+  <div class="container">
+    <div class="email-box" id="email">Loading...</div>
+    <div class="button-group">
+      <button onclick="copyEmail()">📋 Copy</button>
+      <button onclick="refreshMessages()">🔄 Refresh</button>
+    </div>
+    <h3>Inbox</h3>
+    <ul id="inbox" class="message-list"></ul>
+  </div>
+  <footer>&copy; 2025 TempMail Pro. All rights reserved.</footer>
+  <script>
+    const login = 'user' + Math.floor(Math.random() * 10000);
+    const domain = '1secmail.com';
+    const email = `${login}@${domain}`;
+    document.getElementById('email').innerText = email;
+
+    function copyEmail() {
+      navigator.clipboard.writeText(email).then(() => alert('Email copied!'));
+    }
+
+    function refreshMessages() {
+      fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`)
+        .then(res => res.json())
+        .then(data => {
+          const inbox = document.getElementById('inbox');
+          inbox.innerHTML = '';
+          if (data.length === 0) {
+            inbox.innerHTML = '<li>No messages yet.</li>';
+            return;
+          }
+          data.forEach(msg => {
+            const li = document.createElement('li');
+            li.className = 'message';
+            li.innerHTML = `
+              <strong>From:</strong> ${msg.from}<br>
+              <strong>Subject:</strong> ${msg.subject}<br>
+              <button onclick="readMessage(${msg.id})">📖 Read</button>
+            `;
+            inbox.appendChild(li);
+          });
+        });
+    }
+
+    function readMessage(id) {
+      fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${id}`)
+        .then(res => res.json())
+        .then(data => {
+          alert(`📧 Subject: ${data.subject}\nFrom: ${data.from}\n\n${data.textBody}`);
+        });
+    }
+
+    refreshMessages();
+  </script>
+</body>
+</html>
