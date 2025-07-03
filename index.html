@@ -2,61 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TempMail Pro (Mail.tm)</title>
+  <title>TempMail Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      color: #111;
+    }
+    .header {
+      background-color: #1e293b;
+      color: white;
+      padding: 15px 25px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
     }
     .container {
-      max-width: 800px;
+      max-width: 850px;
       margin: auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 30px 20px;
     }
     .email-box {
-      background-color: #333;
+      background: #0f172a;
       color: #fff;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 15px 20px;
+      border-radius: 10px;
       font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       word-break: break-all;
-      margin-top: 10px;
     }
     .btn {
-      background-color: #007bff;
+      background-color: #3b82f6;
       color: white;
-      padding: 10px 20px;
+      padding: 10px 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
+      font-weight: 500;
       cursor: pointer;
-      margin-top: 10px;
       margin-right: 10px;
     }
+    .btn:hover {
+      background-color: #2563eb;
+    }
+    .btn-row {
+      margin: 15px 0;
+    }
     .email-list {
-      margin-top: 25px;
+      margin-top: 20px;
     }
     .email-item {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
+      background: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
       cursor: pointer;
     }
     .email-item:hover {
-      background: #f0f0f0;
+      background: #f9fafb;
     }
     #modal {
       position: fixed;
       top: 0; left: 0;
       width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.6);
       display: none;
-      align-items: center;
       justify-content: center;
-      z-index: 999;
+      align-items: center;
+      z-index: 1000;
     }
     #modal-content {
       background: #fff;
@@ -66,23 +88,34 @@
       overflow-y: auto;
       border-radius: 10px;
     }
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+      margin-top: 40px;
+    }
   </style>
 </head>
 <body>
+  <div class="header">📬 TempMail Pro</div>
   <div class="container">
-    <h2>📨 TempMail Pro (Powered by Mail.tm)</h2>
-    <div>
-      <strong>Your Temporary Email:</strong>
-      <div id="email" class="email-box">Loading...</div>
-      <button class="btn" onclick="generateEmail()">Generate New Email</button>
+    <h2>Your Temporary Email Address</h2>
+    <div class="email-box">
+      <span id="email">Loading...</span>
+      <button class="btn" onclick="copyEmail()">📋 Copy</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="fetchInbox()">🔄 Refresh Inbox</button>
+      <button class="btn" onclick="generateEmail()">🔁 Change Email</button>
     </div>
 
     <div class="email-list">
       <h3>Inbox:</h3>
-      <button class="btn" onclick="fetchInbox()">🔄 Refresh Inbox</button>
       <div id="emails">Checking for emails...</div>
     </div>
   </div>
+
+  <div class="footer">Not affiliated with temp-mail.org. Built using Mail.tm API.</div>
 
   <!-- Modal Viewer -->
   <div id="modal" onclick="closeModal()">
@@ -90,9 +123,12 @@
   </div>
 
   <script>
-    let token = "";
-    let emailAddress = "";
-    let userId = "";
+    let token = "", emailAddress = "", userId = "";
+
+    function copyEmail() {
+      navigator.clipboard.writeText(emailAddress);
+      alert("Copied to clipboard!");
+    }
 
     async function generateEmail() {
       const rand = Math.random().toString(36).substring(2, 12);
@@ -100,36 +136,32 @@
       const domains = await domainResp.json();
       const domain = domains["hydra:member"][0].domain;
       emailAddress = `${rand}@${domain}`;
-
       const password = rand + "A@123";
 
-      const account = await fetch('https://api.mail.tm/accounts', {
+      const create = await fetch('https://api.mail.tm/accounts', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({address: emailAddress, password})
       });
 
-      if (account.status === 422) {
-        return generateEmail(); // retry if email exists
-      }
+      if (create.status === 422) return generateEmail();
 
-      const loginResp = await fetch('https://api.mail.tm/token', {
+      const login = await fetch('https://api.mail.tm/token', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({address: emailAddress, password})
       });
 
-      const loginData = await loginResp.json();
+      const loginData = await login.json();
       token = loginData.token;
 
-      const userResp = await fetch('https://api.mail.tm/me', {
+      const user = await fetch('https://api.mail.tm/me', {
         headers: {Authorization: `Bearer ${token}`}
       });
-      const userData = await userResp.json();
+      const userData = await user.json();
       userId = userData.id;
 
       document.getElementById("email").innerText = emailAddress;
-
       fetchInbox();
     }
 
@@ -141,10 +173,10 @@
       });
       const data = await resp.json();
       const emails = data["hydra:member"];
-
       const container = document.getElementById("emails");
+
       if (emails.length === 0) {
-        container.innerHTML = "<i>No emails yet. Click 'Refresh Inbox' above to check again.</i>";
+        container.innerHTML = "<i>No emails yet. Click 'Refresh Inbox' to check again.</i>";
         return;
       }
 
@@ -175,7 +207,7 @@
       document.getElementById("modal").style.display = "none";
     }
 
-    // Generate email on load
+    // Load on start
     generateEmail();
   </script>
 </body>
