@@ -6,6 +6,8 @@
   <title>TempMail Pro - Disposable Temporary Email</title>
   <meta name="description" content="Get a free disposable email address instantly with TempMail Pro. Protect your privacy with anonymous, temporary email addresses.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -13,6 +15,11 @@
       font-family: 'Inter', sans-serif;
       background: linear-gradient(to right, #e2e8f0, #f8fafc);
       color: #111;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: #0f172a;
+      color: #f8fafc;
     }
     header {
       background: linear-gradient(to right, #0f172a, #1e293b);
@@ -20,7 +27,17 @@
       padding: 20px;
       text-align: center;
     }
-    header h1 { margin: 0; font-size: 28px; }
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
     .container {
       max-width: 1200px;
       margin: auto;
@@ -62,6 +79,28 @@
       transition: background 0.3s;
     }
     .btn:hover { background: #2563eb; }
+    .copy-icon {
+      font-size: 18px;
+      padding: 10px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .copy-icon:hover { background: #2563eb; }
+    .shimmer {
+      background: linear-gradient(to right, #1f2937 8%, #374151 18%, #1f2937 33%);
+      background-size: 800px 104px;
+      animation: shimmer 1.5s infinite linear;
+      height: 40px;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      0% { background-position: -468px 0; }
+      100% { background-position: 468px 0; }
+    }
     .email-list .email-item {
       background: #111827;
       padding: 15px;
@@ -101,6 +140,7 @@
       overflow-y: auto;
       border-radius: 10px;
     }
+    #qrcode { margin-top: 10px; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -108,18 +148,19 @@
   </style>
 </head>
 <body>
+  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
   <header>
     <h1>📬 TempMail Pro</h1>
     <p>Your Trusted Disposable Email Service</p>
   </header>
-
   <div class="container">
     <div class="box">
       <h2>Temporary Email Address</h2>
       <div class="email-box">
         <span id="email">Loading...</span>
-        <button class="btn" onclick="copyEmail()">📋 Copy</button>
+        <button class="copy-icon" onclick="copyEmail()">📋</button>
       </div>
+      <div id="qrcode"></div>
       <div>
         <button class="btn" onclick="fetchInbox()">🔄 Refresh</button>
         <button class="btn" onclick="generateEmail()">🔁 Change</button>
@@ -128,146 +169,100 @@
 
     <div class="box email-list">
       <h2>Inbox <button class="btn" onclick="fetchInbox()">🔄 Manual Refresh</button></h2>
-      <div id="emails">Checking for emails...</div>
+      <div id="emails"><div class="shimmer"></div></div>
     </div>
 
+    <!-- Info Section Remains Same -->
     <section class="info-section">
       <h2>What is Disposable Temporary E-mail?</h2>
-      <p>Disposable email addresses let you receive emails at a temporary address that self-destructs after a set time. They protect your privacy from spam, phishing, and data leaks Disposable email - is a free email service that allows to receive email at a temporary address that self-destructed after a certain time elapses. It is also known by names like : tempmail, 10minutemail, 10minmail, throwaway email, fake-mail , fake email generator, burner mail or trash-mail. Many forums, Wi-Fi owners, websites and blogs ask visitors to register before they can view content, post comments or download something. It- is most advanced throwaway email service that helps you avoid spam and stay safe.</p>
-
+      <p>Disposable email addresses let you receive emails at a temporary address that self-destructs after a set time. They protect your privacy from spam, phishing, and data leaks.</p>
       <h2>The Tech behind Disposable Email Addresses</h2>
-      <p>These services generate anonymous email accounts using backend APIs like Mail.tm, allowing you to read and manage messages via secure frontend interfaces without needing signup Everyone owns an email address each and every hour, for everything from connecting at work, with business prospects, reaching out to friends and colleagues using the email address as an online passport. Nearly 99% of all apps and services we sign-up today required an email address, likewise to most shoppers loyalty cards, contest and offer entries, and more.
-
-We all enjoy having an email address, but getting tons of spam emails each day doesn’t feel comfortable. Furthermore, it’s entirely common for stores to have their databases hacked, leaving your business email address at risk and more likely to end up on spam lists. Still, nothing done online is 100% private. Thus you need to protect your email contact identity and best done using disposable emails address.</p>
-
+      <p>These services generate anonymous email accounts using backend APIs like Mail.tm, allowing you to read and manage messages via secure frontend interfaces without needing signup.</p>
       <h2>Why Would You Need a Fake Email Address?</h2>
-      <p>To register for websites, download resources, or verify accounts without exposing your primary email. Great for temporary tasks, trials, or keeping your inbox clean You must have noted services such as Amazon Prime, Hulu and Netflix allow limited-time test runs(trials), however, if still determined to use the services all you need is a disposable email address. Technically, you can extend your trial usage using a different email address linked to your original (genuine) after the trial period expires.
-
-An offline or online retailer tend to demand an email address to take advantage of their offers, however, this result in an unwanted deluge of spam promotional emails that you could avoid. Temporary email address makes it easy to cut out those irritating messages you are still receiving.
-
-Technically, the idea of a temporary email address conjures up with black hat hackers and underworld internet, but there are convincing reason to us fake email services.
-
-If you are looking for legitimate reasons to use a disposable email address here’s a few:
-
-Sign-Up For Store Loyalty Card:
-If you don’t want to get promotional emails from the store adverting new products, use a disposable email address instead of your business email address, and you rule out spam emails. If the store gets hacked for email, you real email address won’t get stolen.
-Test Your App:
-You just completed coding a web app, and you want to test it comprehensively before releasing it for sale, you can easily get 100 disposable emails, create dummy accounts and test it yourself other than hiring unreliable users online to test the app.
-Sign-Up For Double Account With A Web App:
-You need another IFTTT account to program a second Twitter account run for your marketing site. A new account needs a different mail from your default, to rule out managing a new email inbox, get a new disposable email address at temp-mail.org
-Eliminate Spam:
-A Disposable email address is a very useful tool against spam, especially, for users who consistently access web forms, forums and discussion groups you can curb spam to an absolute minimum with a disposable email address.</p>
-
+      <p>To register for websites, download resources, or verify accounts without exposing your primary email. Great for temporary tasks, trials, or keeping your inbox clean.</p>
       <h2>How to Choose a Disposable Email?</h2>
-      <p>Pick a provider with a secure backend, good deliverability, multiple domains, and inbox features like message view, refresh, copy, and delete The best fake email provider should:
-
-Allow users create temporary emails address at the click of a button.
-No registration is registration or identity information about the user.
-The email address should remain anonymous.
-Offer more than one email address (as many as you may want).
-Offers temporarily email stored (temporal email inbox at user’s disposal).
-Straightforward and functional design to get a mundane email.
-Provider random account and users can choose an address of choice.
-Thus stay spam free and save time with temp-mail.org your favorite email service.</p>
-
+      <p>Pick a provider with a secure backend, good deliverability, multiple domains, and inbox features like message view, refresh, copy, and delete.</p>
       <h2>How to Use Disposable Email Address?</h2>
-      <p>Simply copy the generated email, paste it where needed, and check the inbox below for replies or verification codes. Then discard it once done Users choose to get disposable email address by creating a new email account with their current email provider’s such as Gmail, but the account comes with many challenges such as you will have to manage emails new account. Users, who opt for free mail services by creating a new account, put up with a new email address.
-
-It’d work if you had one email address and a few disposable emails from temp-mail.org and managed one account inbox.
-
-The amazing thing about a disposable email address is you can forward directly to your real email account. In case the disposable email address is compromised, and you are suspicious of one of your contacts you can have those emails sent directly to your trash, and for those necessary connections have them sent directly to your real email address inbox.</p>
+      <p>Simply copy the generated email, paste it where needed, and check the inbox below for replies or verification codes. Then discard it once done.</p>
     </section>
   </div>
-
   <footer>
-    <p>&copy; 2025 TempMail Pro.</p>
+    <p>&copy; 2025 TempMail Pro. Built with ❤️ using the Mail.tm API. Not affiliated with temp-mail.org.</p>
   </footer>
-
   <div id="modal" onclick="closeModal()">
     <div id="modal-content" onclick="event.stopPropagation()"></div>
   </div>
-
   <script>
     let token = '', emailAddress = '', password = '';
-
     async function generateEmail() {
       const rand = Math.random().toString(36).substring(2, 10);
       const domainRes = await fetch('https://api.mail.tm/domains');
       const domainData = await domainRes.json();
       const domain = domainData["hydra:member"][0].domain;
-
       emailAddress = `${rand}@${domain}`;
       password = rand + 'A1!';
-
       try {
         await fetch('https://api.mail.tm/accounts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: emailAddress, password })
         });
-      } catch (e) {
-        console.warn('Account may already exist. Continuing...');
-      }
-
+      } catch (e) { console.warn('Account may already exist.'); }
       const loginRes = await fetch('https://api.mail.tm/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address: emailAddress, password })
       });
       const loginData = await loginRes.json();
       token = loginData.token;
-
       document.getElementById('email').innerText = emailAddress;
+      QRCode.toCanvas(document.getElementById("qrcode"), emailAddress, err => err && console.error(err));
       fetchInbox();
     }
-
     async function fetchInbox() {
       if (!token) return;
-
+      const inboxContainer = document.getElementById('emails');
+      inboxContainer.innerHTML = '<div class="shimmer"></div>';
       const inboxRes = await fetch('https://api.mail.tm/messages', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const inboxData = await inboxRes.json();
       const emails = inboxData["hydra:member"];
-
-      const inboxContainer = document.getElementById('emails');
-      if (!emails.length) {
-        inboxContainer.innerHTML = '<i>No emails received yet. Try refreshing.</i>';
-        return;
-      }
-
       inboxContainer.innerHTML = '';
+      if (!emails.length) return inboxContainer.innerHTML = '<i>No emails received yet. Try refreshing.</i>';
       emails.forEach(email => {
         const item = document.createElement('div');
         item.className = 'email-item';
-        item.innerHTML = `<strong>From:</strong> ${email.from.address}<br><strong>Subject:</strong> ${email.subject}`;
-        item.onclick = () => readEmail(email.id);
+        item.innerHTML = `<strong>From:</strong> ${email.from.address}<br><strong>Subject:</strong> ${email.subject} <button class='btn' onclick='deleteEmail("${email.id}", event)'>🗑️</button>`;
+        item.onclick = (e) => { if (!e.target.closest('button')) readEmail(email.id); };
         inboxContainer.appendChild(item);
       });
     }
-
     async function readEmail(id) {
       const res = await fetch(`https://api.mail.tm/messages/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       const content = data.html?.[0] || data.text || 'No content available';
-      const modal = document.getElementById('modal');
       document.getElementById('modal-content').innerHTML = `<h3>${data.subject}</h3><hr>${content}`;
-      modal.style.display = 'flex';
+      document.getElementById('modal').style.display = 'flex';
     }
-
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
+    async function deleteEmail(id, event) {
+      event.stopPropagation();
+      await fetch(`https://api.mail.tm/messages/${id}`, {
+        method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchInbox();
+      Swal.fire('Deleted!', 'Email deleted successfully.', 'success');
     }
-
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
     function copyEmail() {
       navigator.clipboard.writeText(emailAddress);
-      alert('Copied to clipboard!');
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copied to clipboard!', showConfirmButton: false, timer: 2000 });
     }
-
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+    }
     generateEmail();
-    setInterval(fetchInbox, 10000); // Auto-refresh every 10 seconds
+    setInterval(fetchInbox, 10000);
   </script>
 </body>
 </html>
