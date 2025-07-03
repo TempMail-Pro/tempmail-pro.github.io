@@ -1,214 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>TempMail Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TempMail Pro - Disposable Temporary Email</title>
+  <meta name="description" content="Get a free disposable email address instantly with TempMail Pro. Protect your privacy with anonymous, temporary email addresses.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: #f3f4f6;
       margin: 0;
-      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #e2e8f0, #f8fafc);
       color: #111;
     }
-    .header {
-      background-color: #1e293b;
+    header {
+      background: linear-gradient(to right, #0f172a, #1e293b);
       color: white;
-      padding: 15px 25px;
+      padding: 20px;
       text-align: center;
-      font-size: 22px;
-      font-weight: 600;
     }
+    header h1 { margin: 0; font-size: 28px; }
     .container {
-      max-width: 850px;
+      max-width: 1200px;
       margin: auto;
       padding: 30px 20px;
     }
+    .section {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .box {
+      flex: 1 1 45%;
+      background: #1f2937;
+      color: #f1f5f9;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
     .email-box {
       background: #0f172a;
-      color: #fff;
-      padding: 15px 20px;
-      border-radius: 10px;
-      font-size: 18px;
+      padding: 15px;
+      border-radius: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      word-break: break-all;
+      font-size: 18px;
     }
     .btn {
-      background-color: #3b82f6;
-      color: white;
       padding: 10px 16px;
+      margin: 8px 8px 0 0;
+      background: #3b82f6;
+      color: white;
       border: none;
-      border-radius: 8px;
-      font-weight: 500;
+      border-radius: 6px;
       cursor: pointer;
-      margin-right: 10px;
     }
-    .btn:hover {
-      background-color: #2563eb;
-    }
-    .btn-row {
-      margin: 15px 0;
-    }
-    .email-list {
-      margin-top: 20px;
-    }
-    .email-item {
-      background: #fff;
-      border-radius: 8px;
+    .btn:hover { background: #2563eb; }
+    .email-list .email-item {
+      background: #111827;
       padding: 15px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-top: 10px;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .email-item:hover {
-      background: #f9fafb;
+    .email-item:hover { background: #1f2937; }
+    .info-section {
+      margin-top: 50px;
     }
-    #modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.6);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    #modal-content {
-      background: #fff;
-      padding: 20px;
-      max-width: 600px;
-      max-height: 80vh;
-      overflow-y: auto;
-      border-radius: 10px;
-    }
-    .footer {
+    .info-section h2 { font-size: 24px; margin-top: 30px; }
+    .info-section p { line-height: 1.6; color: #374151; }
+    footer {
       text-align: center;
-      font-size: 13px;
-      color: #999;
-      margin-top: 40px;
+      background: #0f172a;
+      color: #cbd5e1;
+      padding: 20px;
+      margin-top: 50px;
     }
   </style>
 </head>
 <body>
-  <div class="header">📬 TempMail Pro</div>
+  <header>
+    <h1>📬 TempMail Pro</h1>
+    <p>Your Trusted Disposable Email Service</p>
+  </header>
+
   <div class="container">
-    <h2>Your Temporary Email Address</h2>
-    <div class="email-box">
-      <span id="email">Loading...</span>
-      <button class="btn" onclick="copyEmail()">📋 Copy</button>
-    </div>
-    <div class="btn-row">
-      <button class="btn" onclick="fetchInbox()">🔄 Refresh Inbox</button>
-      <button class="btn" onclick="generateEmail()">🔁 Change Email</button>
-    </div>
+    <section class="section">
+      <div class="box">
+        <h2>Temporary Email Address</h2>
+        <div class="email-box">
+          <span id="email">Loading...</span>
+          <button class="btn" onclick="copyEmail()">📋 Copy</button>
+        </div>
+        <div>
+          <button class="btn" onclick="fetchInbox()">🔄 Refresh</button>
+          <button class="btn" onclick="generateEmail()">🔁 Change</button>
+          <button class="btn" onclick="deleteEmail()">🗑️ Delete</button>
+        </div>
+      </div>
 
-    <div class="email-list">
-      <h3>Inbox:</h3>
-      <div id="emails">Checking for emails...</div>
-    </div>
+      <div class="box email-list">
+        <h2>Inbox</h2>
+        <div id="emails">Checking for emails...</div>
+      </div>
+    </section>
+
+    <section class="info-section">
+      <h2>What is Disposable Temporary E-mail?</h2>
+      <p>Disposable email addresses let you receive emails at a temporary address that self-destructs after a set time. They protect your privacy from spam, phishing, and data leaks.</p>
+
+      <h2>The Tech behind Disposable Email Addresses</h2>
+      <p>These services generate anonymous email accounts using backend APIs like Mail.tm, allowing you to read and manage messages via secure frontend interfaces without needing signup.</p>
+
+      <h2>Why Would You Need a Fake Email Address?</h2>
+      <p>To register for websites, download resources, or verify accounts without exposing your primary email. Great for temporary tasks, trials, or keeping your inbox clean.</p>
+
+      <h2>How to Choose a Disposable Email?</h2>
+      <p>Pick a provider with a secure backend, good deliverability, multiple domains, and inbox features like message view, refresh, copy, and delete.</p>
+
+      <h2>How to Use Disposable Email Address?</h2>
+      <p>Simply copy the generated email, paste it where needed, and check the inbox below for replies or verification codes. Then discard it once done.</p>
+    </section>
   </div>
 
-  <div class="footer">Not affiliated with temp-mail.org. Built using Mail.tm API.</div>
+  <footer>
+    <p>&copy; 2025 TempMail Pro. Built with ❤️ using the Mail.tm API. Not affiliated with temp-mail.org.</p>
+  </footer>
 
-  <!-- Modal Viewer -->
-  <div id="modal" onclick="closeModal()">
-    <div id="modal-content" onclick="event.stopPropagation()"></div>
-  </div>
-
-  <script>
-    let token = "", emailAddress = "", userId = "";
-
-    function copyEmail() {
-      navigator.clipboard.writeText(emailAddress);
-      alert("Copied to clipboard!");
-    }
-
-    async function generateEmail() {
-      const rand = Math.random().toString(36).substring(2, 12);
-      const domainResp = await fetch('https://api.mail.tm/domains');
-      const domains = await domainResp.json();
-      const domain = domains["hydra:member"][0].domain;
-      emailAddress = `${rand}@${domain}`;
-      const password = rand + "A@123";
-
-      const create = await fetch('https://api.mail.tm/accounts', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({address: emailAddress, password})
-      });
-
-      if (create.status === 422) return generateEmail();
-
-      const login = await fetch('https://api.mail.tm/token', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({address: emailAddress, password})
-      });
-
-      const loginData = await login.json();
-      token = loginData.token;
-
-      const user = await fetch('https://api.mail.tm/me', {
-        headers: {Authorization: `Bearer ${token}`}
-      });
-      const userData = await user.json();
-      userId = userData.id;
-
-      document.getElementById("email").innerText = emailAddress;
-      fetchInbox();
-    }
-
-    async function fetchInbox() {
-      if (!token) return;
-
-      const resp = await fetch('https://api.mail.tm/messages', {
-        headers: {Authorization: `Bearer ${token}`}
-      });
-      const data = await resp.json();
-      const emails = data["hydra:member"];
-      const container = document.getElementById("emails");
-
-      if (emails.length === 0) {
-        container.innerHTML = "<i>No emails yet. Click 'Refresh Inbox' to check again.</i>";
-        return;
-      }
-
-      container.innerHTML = "";
-      emails.forEach(email => {
-        const div = document.createElement("div");
-        div.className = "email-item";
-        div.innerHTML = `<strong>From:</strong> ${email.from.address}<br><strong>Subject:</strong> ${email.subject}`;
-        div.onclick = () => readEmail(email.id);
-        container.appendChild(div);
-      });
-    }
-
-    async function readEmail(id) {
-      const resp = await fetch(`https://api.mail.tm/messages/${id}`, {
-        headers: {Authorization: `Bearer ${token}`}
-      });
-      const data = await resp.json();
-      const content = data.html && data.html.length > 0 ? data.html[0] : (data.text || "No content");
-
-      const modal = document.getElementById("modal");
-      const modalContent = document.getElementById("modal-content");
-      modalContent.innerHTML = `<h3>${data.subject}</h3><hr>${content}`;
-      modal.style.display = "flex";
-    }
-
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-    }
-
-    // Load on start
-    generateEmail();
-  </script>
+  <!-- You can insert the JavaScript here (backend logic will be added next) -->
 </body>
 </html>
