@@ -113,7 +113,7 @@
     </div>
 
     <div class="box email-list">
-      <h2>Inbox</h2>
+      <h2>Inbox <button class="btn" onclick="fetchInbox()">🔄 Manual Refresh</button></h2>
       <div id="emails">Checking for emails...</div>
     </div>
 
@@ -144,7 +144,7 @@
     <div id="modal-content" onclick="event.stopPropagation()"></div>
   </div>
 
-  <!-- Working JavaScript backend logic -->
+  <!-- JavaScript: Mail.tm backend logic -->
   <script>
     let token = '', emailAddress = '', password = '';
 
@@ -225,7 +225,7 @@
     }
 
     generateEmail();
-    setInterval(fetchInbox, 30000);
+    setInterval(fetchInbox, 30000); // Auto-refresh every 30 seconds
   </script>
 </body>
 </html>
