@@ -73,6 +73,24 @@
       padding: 20px;
       margin-top: 50px;
     }
+    #modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    #modal-content {
+      background: #fff;
+      padding: 20px;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
@@ -91,7 +109,6 @@
       <div>
         <button class="btn" onclick="fetchInbox()">🔄 Refresh</button>
         <button class="btn" onclick="generateEmail()">🔁 Change</button>
-        <button class="btn" onclick="deleteEmail()">🗑️ Delete</button>
       </div>
     </div>
 
@@ -122,6 +139,93 @@
     <p>&copy; 2025 TempMail Pro. Built with ❤️ using the Mail.tm API. Not affiliated with temp-mail.org.</p>
   </footer>
 
-  <!-- You can insert the JavaScript here (backend logic will be added next) -->
+  <!-- Modal for email reader -->
+  <div id="modal" onclick="closeModal()">
+    <div id="modal-content" onclick="event.stopPropagation()"></div>
+  </div>
+
+  <!-- Working JavaScript backend logic -->
+  <script>
+    let token = '', emailAddress = '', password = '';
+
+    async function generateEmail() {
+      const rand = Math.random().toString(36).substring(2, 10);
+      const domainRes = await fetch('https://api.mail.tm/domains');
+      const domainData = await domainRes.json();
+      const domain = domainData["hydra:member"][0].domain;
+
+      emailAddress = `${rand}@${domain}`;
+      password = rand + 'A1!';
+
+      try {
+        await fetch('https://api.mail.tm/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: emailAddress, password })
+        });
+      } catch (e) {
+        console.warn('Account may already exist. Continuing...');
+      }
+
+      const loginRes = await fetch('https://api.mail.tm/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: emailAddress, password })
+      });
+      const loginData = await loginRes.json();
+      token = loginData.token;
+
+      document.getElementById('email').innerText = emailAddress;
+      fetchInbox();
+    }
+
+    async function fetchInbox() {
+      if (!token) return;
+
+      const inboxRes = await fetch('https://api.mail.tm/messages', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const inboxData = await inboxRes.json();
+      const emails = inboxData["hydra:member"];
+
+      const inboxContainer = document.getElementById('emails');
+      if (!emails.length) {
+        inboxContainer.innerHTML = '<i>No emails received yet. Try refreshing.</i>';
+        return;
+      }
+
+      inboxContainer.innerHTML = '';
+      emails.forEach(email => {
+        const item = document.createElement('div');
+        item.className = 'email-item';
+        item.innerHTML = `<strong>From:</strong> ${email.from.address}<br><strong>Subject:</strong> ${email.subject}`;
+        item.onclick = () => readEmail(email.id);
+        inboxContainer.appendChild(item);
+      });
+    }
+
+    async function readEmail(id) {
+      const res = await fetch(`https://api.mail.tm/messages/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const content = data.html?.[0] || data.text || 'No content available';
+      const modal = document.getElementById('modal');
+      document.getElementById('modal-content').innerHTML = `<h3>${data.subject}</h3><hr>${content}`;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function copyEmail() {
+      navigator.clipboard.writeText(emailAddress);
+      alert('Copied to clipboard!');
+    }
+
+    generateEmail();
+    setInterval(fetchInbox, 30000);
+  </script>
 </body>
 </html>
