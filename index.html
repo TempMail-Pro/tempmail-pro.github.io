@@ -153,12 +153,21 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-   footer a {
+   .main-footer {
+  background: linear-gradient(to right, #0f172a, #1e293b);
+  padding: 20px;
+  text-align: center;
+  color: white;
+  margin-top: 40px;
+}
+
+.main-footer a {
   color: #93c5fd;
   text-decoration: none;
-  margin: 0 5px;
+  margin: 0 8px;
 }
-footer a:hover {
+
+.main-footer a:hover {
   text-decoration: underline;
 }
 
@@ -216,8 +225,9 @@ body.dark #modal-content {
       <div id="emails"><div class="spinner"><div></div></div></div>
     </div>
   </div>
-  <footer>
-  <p>&copy; 2025 <strong>TempMail Pro</strong> • 
+  <footer class="main-footer">
+  <p>
+    &copy; 2025 <strong>TempMail Pro</strong> • 
     <a href="about.html">About</a> • 
     <a href="privacy.html">Privacy Policy</a> • 
     <a href="terms.html">Terms</a> • 
