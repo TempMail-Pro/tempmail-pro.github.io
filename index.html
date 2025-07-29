@@ -23,6 +23,38 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <!-- Schema.org Structured Data for WebSite -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "TempMail Pro",
+    "url": "https://tempmail-pro.github.io/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://tempmail-pro.github.io/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Schema.org Structured Data for Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "TempMail Pro",
+    "url": "https://tempmail-pro.github.io/",
+    "logo": "https://tempmail-pro.github.io/assets/tempmail-banner.png",
+    "sameAs": [
+      "https://github.com/TempMail-Pro/TempMail-Pro.github.io"
+      // Add other official social media profiles or external links here if you have them
+      // Example: "https://twitter.com/YourTempMailPro"
+    ]
+  }
+  </script>
+
   <style>
     :root {
       --accent: #3b82f6;
@@ -559,31 +591,82 @@
     let token = '', emailAddress = '', password = '';
     async function generateEmail() {
       document.getElementById('email').innerText = "Generating...";
-      document.getElementById('qrcode').innerHTML = "";
-      token = ''; emailAddress = ''; password = '';
-      shimmerInbox();
+      document.getElementById('qrcode').innerHTML = ""; // Clear existing QR code
+      token = '';
+      emailAddress = ''; // Ensure it's reset to empty
+      password = '';
+      shimmerInbox(); // Show loading state for inbox
+
       try {
         const rand = Math.random().toString(36).substring(2, 10);
         const domainRes = await fetch('https://api.mail.tm/domains');
+        
+        // Check if the response is OK before parsing JSON
+        if (!domainRes.ok) {
+            throw new Error(`API Error: Failed to fetch domains. Status: ${domainRes.status}`);
+        }
+        
         const domainData = await domainRes.json();
+
+        // Check if domainData and domainData["hydra:member"] exist and have at least one element
+        if (!domainData || !domainData["hydra:member"] || domainData["hydra:member"].length === 0) {
+          throw new Error("API Error: Could not fetch domains. Response was empty or malformed.");
+        }
+
         const domain = domainData["hydra:member"][0].domain;
+        if (!domain || typeof domain !== 'string' || domain.length === 0) {
+            throw new Error("API Error: Domain received was invalid or empty.");
+        }
+
         emailAddress = `${rand}@${domain}`;
         password = rand + 'A1!';
-        await fetch('https://api.mail.tm/accounts', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+
+        // Validate emailAddress before proceeding to account creation and QR code
+        if (!emailAddress || typeof emailAddress !== 'string' || emailAddress.length < 5 || !emailAddress.includes('@')) {
+            throw new Error("Generated email address is invalid.");
+        }
+
+        const accountCreateRes = await fetch('https://api.mail.tm/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: emailAddress, password })
         });
+
+        if (!accountCreateRes.ok) {
+            const errorText = await accountCreateRes.text();
+            throw new Error(`Account creation failed: ${accountCreateRes.status} - ${errorText}`);
+        }
+
         const loginRes = await fetch('https://api.mail.tm/token', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: emailAddress, password })
         });
         const loginData = await loginRes.json();
+
+        if (!loginData || !loginData.token) {
+          throw new Error("Authentication Error: Could not get authentication token.");
+        }
         token = loginData.token;
+
         document.getElementById('email').innerText = emailAddress;
-        QRCode.toCanvas(document.getElementById("qrcode"), emailAddress, err => err && console.error(err));
-        fetchInbox();
+
+        // QR code generation
+        QRCode.toCanvas(document.getElementById("qrcode"), emailAddress, err => {
+          if (err) {
+            console.error("QR Code generation error:", err);
+            // Inform user about QR code failure without stopping the app
+            // Swal.fire('Warning', 'QR Code could not be generated.', 'warning');
+          }
+        });
+
+        fetchInbox(); // Fetch inbox only after successful email generation and token acquisition
       } catch (e) {
-        document.getElementById('email').innerText = "Error! Try again.";
+        console.error("Error in generateEmail:", e);
+        document.getElementById('email').innerText = `Error: ${e.message || 'Failed to generate email.'}`;
+        document.getElementById('qrcode').innerHTML = ""; // Clear QR code
+        document.getElementById('emails').innerHTML = '<i>Failed to load inbox.</i>'; // Clear inbox
+        Swal.fire('Error', e.message || 'Failed to generate temporary email. Please try again.', 'error');
       }
     }
     function shimmerInbox() {
