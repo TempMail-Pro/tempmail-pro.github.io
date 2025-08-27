@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://cdn.jsdelivr.net/gh/TempMail-Pro/tempmail-pro.github.io/sitemap.xml
+
+Sitemap: https://tempmail-pro.github.io/sitemap.xml
