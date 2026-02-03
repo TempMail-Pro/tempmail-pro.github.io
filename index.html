@@ -407,19 +407,17 @@
       .box { padding: 10px 2vw;}
       .email-box { font-size: 14.5px;}
     }
-    /* ===== VPN Affiliate Cards ===== */
+/* ===== VPN Affiliate Cards (CENTER ALIGNED – FINAL) ===== */
+
 .vpn-card {
-  max-width: 900px;
-  margin: 28px auto;
-  padding: 22px 26px;
+  max-width: 880px;
+  margin: 32px auto;
+  padding: 26px 24px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
   background: #f8fafc;
   color: #22304b;
+  text-align: center;
 }
 
 body.dark .vpn-card {
@@ -427,48 +425,71 @@ body.dark .vpn-card {
   color: #f8fafc;
 }
 
+/* Headings */
 .vpn-card h3 {
-  margin: 0 0 6px;
-  font-size: 1.25rem;
+  margin: 0 0 10px;
+  font-size: 1.35rem;
+  font-weight: 700;
 }
 
+/* Paragraph text */
 .vpn-card p {
-  margin: 0 0 12px;
-  color: var(--text-muted);
+  margin: 0 auto 14px;
+  max-width: 520px;
+  font-size: 1rem;
   line-height: 1.6;
+  color: var(--text-muted);
 }
 
+body.dark .vpn-card p {
+  color: #cbd5f5;
+}
+
+/* List (HideMyName) */
 .vpn-card ul {
-  margin: 0 0 12px;
-  padding-left: 18px;
+  list-style: none;
+  padding: 0;
+  margin: 0 auto 14px;
+  max-width: 420px;
 }
 
+.vpn-card li {
+  margin-bottom: 6px;
+  font-size: 0.96rem;
+}
+
+/* CTA Button */
 .vpn-card a {
   display: inline-block;
-  padding: 10px 18px;
-  border-radius: 10px;
+  margin-top: 12px;
+  padding: 11px 22px;
+  border-radius: 12px;
   background: var(--accent-gradient);
-  color: #fff;
+  color: #ffffff;
   font-weight: 600;
   text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
 .vpn-card a:hover {
-  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37,99,235,.25);
 }
 
+/* TurboVPN style */
 .vpn-turbo {
-  border-left: 5px solid #ff7a00;
-  background: #fff7ef;
+  border-left: 6px solid #ff7a00;
+  background: #fff6ec;
 }
 
 body.dark .vpn-turbo {
   background: #2a1f17;
 }
 
+/* HideMyName style */
 .vpn-hmn {
-  border-left: 5px solid #2563eb;
-  background: #f3f7ff;
+  border-left: 6px solid #2563eb;
+  background: #f2f6ff;
 }
 
 body.dark .vpn-hmn {
