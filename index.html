@@ -497,6 +497,112 @@ body.dark .vpn-turbo {
 body.dark .vpn-hmn {
   background: #1b2540;
 }
+/* ✨ PREMIUM DONATION BLOCK CSS ✨ */
+.premium-donation {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 440px; 
+  margin: 0 auto 30px auto;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+}
+body.dark .premium-donation {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+.premium-donation::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #f59e0b, #3b82f6);
+  background-size: 200% auto;
+  animation: gradientMove 3s linear infinite;
+}
+@keyframes gradientMove {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+.donation-title {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+body.dark .donation-title { color: #f8fafc; }
+.pulse-icon {
+  animation: heartBeat 1.5s infinite;
+  display: inline-block;
+}
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.3); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.3); }
+  70% { transform: scale(1); }
+}
+.donation-text {
+  font-size: 14.5px;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+body.dark .donation-text { color: #94a3b8; }
+.donation-btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-coffee {
+  background: #FFDD00;
+  color: #000000;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(255, 221, 0, 0.3);
+  transition: all 0.3s ease;
+}
+.btn-coffee:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(255, 221, 0, 0.4);
+}
+.btn-upi {
+  background: #ffffff;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+body.dark .btn-upi {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+.btn-upi:hover {
+  transform: translateY(-3px);
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
   </style>
 </head>
 <body>
@@ -539,6 +645,22 @@ body.dark .vpn-hmn {
           <div class="shimmer"></div>
         </div>
       </section>
+      <div class="premium-donation">
+        <div class="donation-title">
+          <span class="pulse-icon">❤️</span> Keep TempMail Pro Free
+        </div>
+        <p class="donation-text">
+          We protect your privacy with <strong>zero paywalls</strong> or annoying layouts. If this tool saved your real inbox from spam today, a small tip keeps our servers running!
+        </p>
+        <div class="donation-btn-group">
+          <a href="https://buymeacoffee.com/tempmailpro" target="_blank" class="btn-coffee">
+            ☕ Buy us a coffee
+          </a>
+          <a href="upi://pay?pa=YOUR_UPI_ID_HERE&pn=TempMail%20Pro" class="btn-upi">
+            ⚡ Tip via UPI
+          </a>
+        </div>
+      </div>
       <!-- TurboVPN Recommendation -->
 <div class="vpn-card vpn-turbo">
   <div>
