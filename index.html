@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="monetag" content="73744f401d0e4874db9bbeb774aa9b96">
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XP3G21GGBY"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XP3G21GGBY"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -38,7 +37,6 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-  <!-- Schema.org Structured Data for WebSite -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -53,7 +51,6 @@
   }
   </script>
 
-  <!-- Schema.org Structured Data for Organization -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -603,6 +600,33 @@ body.dark .btn-upi {
   border-color: #3b82f6;
   color: #3b82f6;
 }
+
+/* ===== Advertisement Space ===== */
+.ad-container {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto 30px auto;
+  text-align: center;
+}
+.ad-space {
+  background: #e2e8f0; 
+  border: 2px dashed #94a3b8;
+  border-radius: var(--radius-small);
+  padding: 20px;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background .25s, border-color .25s;
+}
+body.dark .ad-space {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
   </style>
 </head>
 <body>
@@ -638,6 +662,13 @@ body.dark .btn-upi {
           <button class="btn" onclick="generateEmail()">🔁 Change</button>
         </div>
       </section>
+
+      <div class="ad-container">
+        <div class="ad-space">
+          <span>Advertisement Space</span>
+        </div>
+      </div>
+
       <section class="box email-list" aria-label="Inbox">
         <h2 style="margin-bottom:10px; font-size:1.18em;">Inbox <button class="btn" style="font-size:13px; padding:6px 13px;" onclick="fetchInbox()">🔄</button></h2>
         <div id="emails">
@@ -661,8 +692,7 @@ body.dark .btn-upi {
           </a>
         </div>
       </div>
-      <!-- TurboVPN Recommendation -->
-<div class="vpn-card vpn-turbo">
+      <div class="vpn-card vpn-turbo">
   <div>
     <h3>🌐 Make Your Temporary Email Experience Even Better</h3>
     <p>
@@ -677,15 +707,13 @@ body.dark .btn-upi {
 </div>
 
     </div>
-    <!-- Info Sections (SEO optimized) -->
     <section class="info-section">
       <h2>What is Disposable Temporary Email?</h2>
       <p>
         A <strong>disposable temporary email address</strong> is a free, anonymous email you can use for receiving OTPs, verification codes, or one-time messages. With <strong>TempMail Pro</strong>, you can instantly generate a <strong>spam-free, temporary email</strong> for signups, app testing, or privacy protection. Avoid marketing emails, keep your main inbox safe, and stay anonymous online in 2025.
       </p>
     </section>
-    <!-- HideMyName VPN Recommendation -->
-<div class="vpn-card vpn-hmn">
+    <div class="vpn-card vpn-hmn">
   <div>
     <h3>✨ Tip for Extra Privacy</h3>
     <p>
@@ -743,31 +771,26 @@ body.dark .btn-upi {
         <li>No registration, no spam, no leaks—just instant, anonymous email.</li>
       </ol>
     </section>
-    <!-- Blog Section (4 in a row, SEO-optimized) -->
     <div class="container">
       <div class="blog-row" style="margin-top:30px;">
-        <!-- Existing Blog Card 1 -->
         <div class="blog-card" onclick="window.location.href='blog.html'">
           <h3 style="margin-bottom: 10px;">Top 7 Reasons to Use Temporary Email in 2025</h3>
           <p>
             Discover why millions trust disposable email for OTPs, privacy, and spam protection. Explore 7 powerful benefits now.
           </p>
         </div>
-        <!-- Existing Blog Card 2 -->
         <div class="blog-card" onclick="window.location.href='blog-otp-tools.html'">
           <h3 style="margin-bottom: 10px;">Best Disposable Email Services for OTPs in 2025 (Compared)</h3>
           <p>
             See the top free temp mail tools for OTPs, privacy, and spam prevention. Find out how TempMail Pro stacks up in 2025.
           </p>
         </div>
-        <!-- Existing Blog Card 3 -->
         <div class="blog-card" onclick="window.location.href='blog-privacy-guide.html'">
           <h3 style="margin-bottom: 10px;">How to Protect Your Privacy Online with Temporary Email (2025 Guide)</h3>
           <p>
             Learn how to safeguard your identity, block spam, and stay anonymous online using the best temporary email solutions in 2025.
           </p>
         </div>
-        <!-- NEW Blog Card for Digital Footprint -->
         <div class="blog-card" onclick="window.location.href='blog-digital-footprint.html'">
           <h3 style="margin-bottom: 10px;">Mastering Your Digital Footprint: How Temporary Email is Essential for Online Privacy in 2025</h3>
           <p>
@@ -798,7 +821,6 @@ body.dark .btn-upi {
   </p>
 </section>
 
-    <!-- FAQ Section -->
     <section class="info-section">
       <h2>Frequently Asked Questions (FAQ) - TempMail Pro</h2>
       <details>
