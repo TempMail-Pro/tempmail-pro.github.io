@@ -607,23 +607,25 @@ body.dark .btn-upi {
   text-align: center;
 }
 
-/* ===== Responsive Sponsor Banner Styles (ANIMATED & COLORFUL) ===== */
+/* ===== Responsive Sponsor Banner Styles (HORIZONTAL & COMPACT) ===== */
 .sponsor-banner {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: row; /* Forces horizontal layout */
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
   /* Fluid gradient background */
   background: linear-gradient(-45deg, #eff6ff, #f0fdf4, #fdf4ff, #fffbeb);
   background-size: 400% 400%;
   animation: fluidGradient 10s ease infinite, gentleFloat 4s ease-in-out infinite;
   border: 2px solid #60a5fa;
   border-radius: var(--radius-small);
-  padding: 24px;
+  padding: 16px 20px; /* Reduced padding to lower height */
   margin: 0 auto 30px auto;
   max-width: 440px;
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
   font-family: 'Inter', system-ui, sans-serif;
-  text-align: center;
+  text-align: left; /* Left align for horizontal layout */
   position: relative;
 }
 
@@ -643,24 +645,25 @@ body.dark .sponsor-banner {
 
 @keyframes gentleFloat {
   0% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  50% { transform: translateY(-3px); }
   100% { transform: translateY(0); }
 }
 
-.sponsor-header {
+.sponsor-content {
+  flex: 1; /* Takes up all remaining space to the left */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
 .sponsor-content h4 {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px; /* Slightly smaller to fit side-by-side */
   font-weight: 800;
   background: linear-gradient(90deg, #2563eb, #db2777);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.3;
 }
 body.dark .sponsor-content h4 {
   background: linear-gradient(90deg, #60a5fa, #f472b6);
@@ -670,33 +673,50 @@ body.dark .sponsor-content h4 {
 
 .sponsor-content p {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 12.5px; /* Reduced to fit horizontal layout perfectly */
   color: #475569;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 body.dark .sponsor-content p {
   color: #cbd5e1;
 }
 
 .sponsor-btn {
+  flex-shrink: 0; /* Prevents button from being squished */
   background: linear-gradient(90deg, #ef4444, #f59e0b);
   color: #ffffff;
-  padding: 12px 20px;
+  padding: 10px 14px;
   text-align: center;
   text-decoration: none;
-  border-radius: 25px; /* Pill shape */
+  border-radius: 20px; /* Pill shape */
   font-weight: 700;
-  font-size: 15px;
-  display: block;
-  margin-top: 8px;
+  font-size: 13px;
+  max-width: 140px; /* Constrain width so text wraps nicely */
+  white-space: normal; /* Allows button text to wrap vertically */
+  line-height: 1.2;
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  margin-top: 0;
 }
 .sponsor-btn:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
   filter: brightness(1.1);
-  color: #ffffff; /* ensure text stays white */
+  color: #ffffff;
+}
+
+/* Fallback for very small phone screens to prevent breaking */
+@media (max-width: 480px) {
+  .sponsor-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  .sponsor-btn {
+    max-width: 100%;
+    width: 100%;
+    margin-top: 8px;
+  }
 }
   </style>
 </head>
@@ -735,12 +755,8 @@ body.dark .sponsor-content p {
       </section>
 
       <div class="sponsor-banner">
-        <div class="sponsor-header">
-          <div class="sponsor-content">
-            <h4>You have hidden your email, But Your IP is Exposed.</h4>
-          </div>
-        </div>
         <div class="sponsor-content">
+          <h4>You have hidden your email, But Your IP is Exposed.</h4>
           <p>We protect your inbox from spam. Protect your device from trackers and hackers with military-grade encryption. Claim your exclusive TempMail discount today.</p>
         </div>
         <a href="https://thevospad.com/g/kzooqy4r6id07534b56961840cf25b/" target="_blank" class="sponsor-btn">Secure My Connection & Claim Offer</a>
