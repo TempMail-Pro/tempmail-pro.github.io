@@ -606,6 +606,98 @@ body.dark .btn-upi {
   margin: 0 auto 30px auto;
   text-align: center;
 }
+
+/* ===== Responsive Sponsor Banner Styles (ANIMATED & COLORFUL) ===== */
+.sponsor-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Fluid gradient background */
+  background: linear-gradient(-45deg, #eff6ff, #f0fdf4, #fdf4ff, #fffbeb);
+  background-size: 400% 400%;
+  animation: fluidGradient 10s ease infinite, gentleFloat 4s ease-in-out infinite;
+  border: 2px solid #60a5fa;
+  border-radius: var(--radius-small);
+  padding: 24px;
+  margin: 0 auto 30px auto;
+  max-width: 440px;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+  font-family: 'Inter', system-ui, sans-serif;
+  text-align: center;
+  position: relative;
+}
+
+/* Dark mode fluid gradient */
+body.dark .sponsor-banner {
+  background: linear-gradient(-45deg, #0f172a, #1e1b4b, #2e1065, #1e293b);
+  background-size: 400% 400%;
+  border-color: #6366f1;
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+}
+
+@keyframes fluidGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes gentleFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+.sponsor-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sponsor-content h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #2563eb, #db2777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+body.dark .sponsor-content h4 {
+  background: linear-gradient(90deg, #60a5fa, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sponsor-content p {
+  margin: 0;
+  font-size: 14.5px;
+  color: #475569;
+  line-height: 1.5;
+}
+body.dark .sponsor-content p {
+  color: #cbd5e1;
+}
+
+.sponsor-btn {
+  background: linear-gradient(90deg, #ef4444, #f59e0b);
+  color: #ffffff;
+  padding: 12px 20px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 25px; /* Pill shape */
+  font-weight: 700;
+  font-size: 15px;
+  display: block;
+  margin-top: 8px;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.sponsor-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  filter: brightness(1.1);
+  color: #ffffff; /* ensure text stays white */
+}
   </style>
 </head>
 <body>
@@ -642,9 +734,16 @@ body.dark .btn-upi {
         </div>
       </section>
 
-      <div class="ad-container">
-        <script async="async" data-cfasync="false" src="https://pl29446087.profitablecpmratenetwork.com/6333837bcdc45fd79b6edd6101c8fc56/invoke.js"></script>
-        <div id="container-6333837bcdc45fd79b6edd6101c8fc56"></div>
+      <div class="sponsor-banner">
+        <div class="sponsor-header">
+          <div class="sponsor-content">
+            <h4>You have hidden your email, But Your IP is Exposed.</h4>
+          </div>
+        </div>
+        <div class="sponsor-content">
+          <p>We protect your inbox from spam. Protect your device from trackers and hackers with military-grade encryption. Claim your exclusive TempMail discount today.</p>
+        </div>
+        <a href="https://thevospad.com/g/kzooqy4r6id07534b56961840cf25b/" target="_blank" class="sponsor-btn">Secure My Connection & Claim Offer</a>
       </div>
 
       <section class="box email-list" aria-label="Inbox">
@@ -654,22 +753,12 @@ body.dark .btn-upi {
           <div class="shimmer"></div>
         </div>
       </section>
-      <div class="premium-donation">
-        <div class="donation-title">
-          <span class="pulse-icon">❤️</span> Keep TempMail Pro Free
-        </div>
-        <p class="donation-text">
-          We protect your privacy with <strong>zero paywalls</strong> or annoying layouts. If this tool saved your real inbox from spam today, a small tip keeps our servers running!
-        </p>
-        <div class="donation-btn-group">
-          <a href="https://buymeacoffee.com/tempmailpro" target="_blank" class="btn-coffee">
-            ☕ Buy us a coffee
-          </a>
-          <a href="upi://pay?pa=YOUR_UPI_ID_HERE&pn=TempMail%20Pro" class="btn-upi">
-            ⚡ Tip via UPI
-          </a>
-        </div>
+
+      <div class="ad-container">
+        <script async="async" data-cfasync="false" src="https://pl29446087.profitablecpmratenetwork.com/6333837bcdc45fd79b6edd6101c8fc56/invoke.js"></script>
+        <div id="container-6333837bcdc45fd79b6edd6101c8fc56"></div>
       </div>
+      
       <div class="vpn-card vpn-turbo">
   <div>
     <h3>🌐 Make Your Temporary Email Experience Even Better</h3>
@@ -851,7 +940,25 @@ body.dark .btn-upi {
       </details>
     </section>
   </main>
+  
   <footer class="main-footer">
+    <div class="premium-donation" style="margin: 0 auto 30px auto;">
+      <div class="donation-title">
+        <span class="pulse-icon">❤️</span> Keep TempMail Pro Free
+      </div>
+      <p class="donation-text">
+        We protect your privacy with <strong>zero paywalls</strong> or annoying layouts. If this tool saved your real inbox from spam today, a small tip keeps our servers running!
+      </p>
+      <div class="donation-btn-group">
+        <a href="https://buymeacoffee.com/tempmailpro" target="_blank" class="btn-coffee">
+          ☕ Buy us a coffee
+        </a>
+        <a href="upi://pay?pa=YOUR_UPI_ID_HERE&pn=TempMail%20Pro" class="btn-upi">
+          ⚡ Tip via UPI
+        </a>
+      </div>
+    </div>
+
     <p>
       &copy; 2025 <strong>TempMail Pro</strong> • 
       <a href="about.html">About</a> • 
@@ -861,6 +968,7 @@ body.dark .btn-upi {
       <a href="/blog.html">Blog</a>
     </p>
   </footer>
+  
   <div id="modal" onclick="closeModal()" aria-modal="true" role="dialog">
     <div id="modal-content" onclick="event.stopPropagation()"></div>
   </div>
