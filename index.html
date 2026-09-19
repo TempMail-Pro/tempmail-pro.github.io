@@ -766,7 +766,11 @@ body.dark .sponsor-content p {
       </div>
 
       <section class="box email-list" aria-label="Inbox">
-        <h2 style="margin-bottom:10px; font-size:1.18em;">Inbox <button class="btn" style="font-size:13px; padding:6px 13px;" onclick="fetchInbox()">🔄</button></h2>
+        <h2 style="margin-bottom:10px; font-size:1.18em;">
+          Inbox
+          <button class="btn" style="font-size:13px; padding:6px 13px;" onclick="fetchInbox()">🔄</button>
+          <button class="btn" style="font-size:13px; padding:6px 13px;" onclick="clearInbox()">🗑️</button>
+        </h2>
         <div id="emails">
           <div class="shimmer"></div>
           <div class="shimmer"></div>
@@ -988,159 +992,383 @@ body.dark .sponsor-content p {
       setTheme(!isDark);
     };
 
-    let token = '', emailAddress = '', password = '';
+    // ===== Temporary Email API =====
+    // TempMailPortal is a free, keyless, CORS-enabled API intended for browser use.
+    const API_BASE = 'https://api.tempmailportal.com';
+    const REQUEST_TIMEOUT_MS = 15000;
+    const POLL_INTERVAL_MS = 10000;
+
+    let token = '';
+    let emailAddress = '';
+    let polling = false;
+    let generating = false;
+    let pollTimer = null;
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[char]));
+    }
+
+    function showStatus(message) {
+      const inbox = document.getElementById('emails');
+      inbox.innerHTML = `<i>${escapeHtml(message)}</i>`;
+    }
+
+    function startLoading() {
+      document.getElementById('email').innerText = 'Generating...';
+      document.getElementById('qrcode').innerHTML = '';
+      shimmerInbox();
+    }
+
+    function stopPollingTimer() {
+      if (pollTimer) {
+        clearTimeout(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function scheduleNextPoll() {
+      stopPollingTimer();
+      pollTimer = setTimeout(async () => {
+        await fetchInbox(true);
+        scheduleNextPoll();
+      }, POLL_INTERVAL_MS);
+    }
+
+    async function fetchWithTimeout(url, options = {}) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    async function readJson(response) {
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const apiMessage = data && typeof data.error === 'string' ? data.error : '';
+        const error = new Error(apiMessage || `HTTP ${response.status}`);
+        error.status = response.status;
+        throw error;
+      }
+      return data;
+    }
+
+    function sanitizeEmailHtml(html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(String(html || ''), 'text/html');
+
+      // Remove active / navigational elements that should never execute inside the page.
+      doc.querySelectorAll('script, iframe, object, embed, form, input, textarea, button, base, meta, link, video, audio').forEach(el => el.remove());
+
+      // Remove inline event handlers and unsafe URLs.
+      doc.querySelectorAll('*').forEach(el => {
+        [...el.attributes].forEach(attr => {
+          const name = attr.name.toLowerCase();
+          const value = attr.value.trim().toLowerCase();
+          if (name.startsWith('on')) el.removeAttribute(attr.name);
+          if ((name === 'href' || name === 'src' || name === 'action') && /^(javascript:|vbscript:|data:text\/html)/i.test(value)) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+
+      doc.querySelectorAll('a[href]').forEach(a => {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer nofollow');
+      });
+
+      return doc.body.innerHTML || '<p>No content available.</p>';
+    }
+
     async function generateEmail() {
-      document.getElementById('email').innerText = "Generating...";
-      document.getElementById('qrcode').innerHTML = ""; // Clear existing QR code
+      if (generating) return;
+      generating = true;
+      stopPollingTimer();
       token = '';
-      emailAddress = ''; // Ensure it's reset to empty
-      password = '';
-      shimmerInbox(); // Show loading state for inbox
+      emailAddress = '';
+      startLoading();
 
       try {
-        const rand = Math.random().toString(36).substring(2, 10);
-        const domainRes = await fetch('https://api.mail.tm/domains');
-        
-        // Check if the response is OK before parsing JSON
-        if (!domainRes.ok) {
-            throw new Error(`API Error: Failed to fetch domains. Status: ${domainRes.status}`);
-        }
-        
-        const domainData = await domainRes.json();
-
-        // Check if domainData and domainData["hydra:member"] exist and have at least one element
-        if (!domainData || !domainData["hydra:member"] || domainData["hydra:member"].length === 0) {
-          throw new Error("API Error: Could not fetch domains. Response was empty or malformed.");
-        }
-
-        const domain = domainData["hydra:member"][0].domain;
-        if (!domain || typeof domain !== 'string' || domain.length === 0) {
-            throw new Error("API Error: Domain received was invalid or empty.");
-        }
-
-        emailAddress = `${rand}@${domain}`;
-        password = rand + 'A1!';
-
-        // Validate emailAddress before proceeding to account creation and QR code
-        if (!emailAddress || typeof emailAddress !== 'string' || emailAddress.length < 5 || !emailAddress.includes('@')) {
-            throw new Error("Generated email address is invalid.");
-        }
-
-        const accountCreateRes = await fetch('https://api.mail.tm/accounts', {
+        // POST /api/inbox returns { address, token } and needs no API key.
+        const response = await fetchWithTimeout(`${API_BASE}/api/inbox`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: emailAddress, password })
+          headers: { 'Accept': 'application/json' }
         });
 
-        if (!accountCreateRes.ok) {
-            const errorText = await accountCreateRes.text();
-            throw new Error(`Account creation failed: ${accountCreateRes.status} - ${errorText}`);
+        const data = await readJson(response);
+
+        if (!data || typeof data.address !== 'string' || typeof data.token !== 'string') {
+          throw new Error('Invalid inbox response');
         }
 
-        const loginRes = await fetch('https://api.mail.tm/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: emailAddress, password })
-        });
-        const loginData = await loginRes.json();
-
-        if (!loginData || !loginData.token) {
-          throw new Error("Authentication Error: Could not get authentication token.");
-        }
-        token = loginData.token;
-
+        emailAddress = data.address;
+        token = data.token;
         document.getElementById('email').innerText = emailAddress;
 
-        // QR code generation
-        QRCode.toCanvas(document.getElementById("qrcode"), emailAddress, err => {
-          if (err) {
-            console.error("QR Code generation error:", err);
-            // Inform user about QR code failure without stopping the app
-            // Swal.fire('Warning', 'QR Code could not be generated.', 'warning');
+        try {
+          QRCode.toCanvas(document.getElementById('qrcode'), emailAddress, err => {
+            if (err) console.warn('QR code could not be generated:', err);
+          });
+        } catch (qrError) {
+          console.warn('QR code error:', qrError);
+        }
+
+        await fetchInbox(false);
+        scheduleNextPoll();
+      } catch (error) {
+        console.warn('Temporary email service unavailable:', error);
+        document.getElementById('email').innerText = 'Tap Change to try again';
+        document.getElementById('qrcode').innerHTML = '';
+        showStatus('Temporary email is temporarily unavailable. Please try again in a moment.');
+      } finally {
+        generating = false;
+      }
+    }
+
+    function shimmerInbox() {
+      document.getElementById('emails').innerHTML = '<div class="shimmer"></div><div class="shimmer"></div>';
+    }
+
+    async function fetchInbox(silent = false) {
+      if (!token || polling || generating) return;
+      polling = true;
+
+      if (!silent) shimmerInbox();
+
+      try {
+        const response = await fetchWithTimeout(`${API_BASE}/api/messages`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json'
           }
         });
 
-        fetchInbox(); // Fetch inbox only after successful email generation and token acquisition
-      } catch (e) {
-        console.error("Error in generateEmail:", e);
-        document.getElementById('email').innerText = `Error: ${e.message || 'Failed to generate email.'}`;
-        document.getElementById('qrcode').innerHTML = ""; // Clear QR code
-        document.getElementById('emails').innerHTML = '<i>Failed to load inbox.</i>'; // Clear inbox
-        Swal.fire('Error', e.message || 'Failed to generate temporary email. Please try again.', 'error');
-      }
-    }
-    function shimmerInbox() {
-      const inboxContainer = document.getElementById('emails');
-      inboxContainer.innerHTML = '<div class="shimmer"></div><div class="shimmer"></div>';
-    }
-    async function fetchInbox() {
-      if (!token) return shimmerInbox();
-      const inboxContainer = document.getElementById('emails');
-      shimmerInbox();
-      try {
-        const inboxRes = await fetch('https://api.mail.tm/messages', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const inboxData = await inboxRes.json();
-        const emails = inboxData["hydra:member"];
+        const emails = await readJson(response);
+
+        if (!Array.isArray(emails)) throw new Error('Invalid inbox response');
+
+        const inboxContainer = document.getElementById('emails');
         inboxContainer.innerHTML = '';
-        if (!emails.length) return inboxContainer.innerHTML = '<i>No emails received yet. Try refreshing.</i>';
+
+        if (!emails.length) {
+          inboxContainer.innerHTML = '<i>No emails received yet. Try refreshing.</i>';
+          return;
+        }
+
         emails.forEach(email => {
+          if (!email || !email.id) return;
+
           const item = document.createElement('div');
           item.className = 'email-item';
-          const received = new Date(email.introDate || email.createdAt || email.seenAt || Date.now()).toLocaleString();
+
+          const sender = typeof email.from === 'string' ? email.from : 'Unknown sender';
+          const subject = typeof email.subject === 'string' && email.subject.trim() ? email.subject : '(No subject)';
+          const received = email.date ? new Date(email.date).toLocaleString() : '';
+          const intro = typeof email.intro === 'string' ? email.intro : '';
+
           item.innerHTML = `
-            <div style="font-size:16px;"><strong>From:</strong> ${email.from.address}</div>
-            <div style="font-weight:600;margin-top:2px;">${email.subject}</div>
-            <div class="email-meta">${received}</div>
-            <button class='delete-btn' aria-label="Delete email" onclick='deleteEmail("${email.id}", event)'>🗑️</button>
+            <div style="font-size:16px;"><strong>From:</strong> ${escapeHtml(sender)}</div>
+            <div style="font-weight:600;margin-top:2px;">${escapeHtml(subject)}</div>
+            <div class="email-meta">${escapeHtml(received)}${intro ? ` · ${escapeHtml(intro)}` : ''}</div>
           `;
+
           item.tabIndex = 0;
-          item.setAttribute("role", "button");
-          item.onclick = (e) => { if (!e.target.closest('button')) readEmail(email.id); };
-          item.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { readEmail(email.id); }};
+          item.setAttribute('role', 'button');
+          item.setAttribute('aria-label', `Open email from ${sender}`);
+          item.onclick = () => readEmail(email.id);
+          item.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              readEmail(email.id);
+            }
+          };
+
           inboxContainer.appendChild(item);
         });
-      } catch (e) {
-        inboxContainer.innerHTML = "<i>Network error. Please refresh.</i>";
+      } catch (error) {
+        console.warn('Inbox refresh failed:', error);
+        if (error && error.status === 401) {
+          token = '';
+          emailAddress = '';
+          stopPollingTimer();
+          document.getElementById('email').innerText = 'Session expired';
+          showStatus('This temporary inbox is no longer available. Tap Change to create a new one.');
+        } else if (!silent) {
+          showStatus('The inbox could not be refreshed right now. Please try again.');
+        }
+      } finally {
+        polling = false;
       }
     }
+
     async function readEmail(id) {
+      if (!token || !id) return;
+
       try {
-        const res = await fetch(`https://api.mail.tm/messages/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+        const response = await fetchWithTimeout(`${API_BASE}/api/messages/${encodeURIComponent(id)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json'
+          }
         });
-        const data = await res.json();
-        const content = data.html?.[0] || data.text || 'No content available';
-        document.getElementById('modal-content').innerHTML = `<h3>${data.subject}</h3><hr>${content}`;
+
+        const data = await readJson(response);
+        const subject = typeof data.subject === 'string' && data.subject.trim() ? data.subject : '(No subject)';
+        const sender = typeof data.from === 'string' ? data.from : 'Unknown sender';
+        const htmlBody = typeof data.html === 'string' && data.html.trim() ? data.html : '';
+        const textBody = typeof data.text === 'string' && data.text.trim() ? data.text : 'No content available';
+
+        const modalContent = document.getElementById('modal-content');
+        modalContent.innerHTML = `
+          <h3>${escapeHtml(subject)}</h3>
+          <div style="margin-bottom:8px;color:#64748b;font-size:13px;">From: ${escapeHtml(sender)}</div>
+          <hr>
+          <div id="message-body"></div>
+        `;
+
+        const messageBody = document.getElementById('message-body');
+
+        if (htmlBody) {
+          const iframe = document.createElement('iframe');
+          iframe.setAttribute('sandbox', '');
+          iframe.setAttribute('title', 'Email content');
+          iframe.style.width = '100%';
+          iframe.style.minHeight = '280px';
+          iframe.style.border = '0';
+          iframe.style.background = '#fff';
+          iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;line-height:1.55;color:#222;margin:16px;word-break:break-word}img{max-width:100%;height:auto}</style></head><body>${sanitizeEmailHtml(htmlBody)}</body></html>`;
+          messageBody.appendChild(iframe);
+        } else {
+          const pre = document.createElement('pre');
+          pre.style.whiteSpace = 'pre-wrap';
+          pre.style.wordBreak = 'break-word';
+          pre.textContent = textBody;
+          messageBody.appendChild(pre);
+        }
+
         document.getElementById('modal').style.display = 'flex';
-        document.getElementById('modal-content').focus();
-      } catch (e) {
-        Swal.fire('Error', 'Could not load email content.', 'error');
-      }
-    }
-    async function deleteEmail(id, event) {
-      event.stopPropagation();
-      try {
-        await fetch(`https://api.mail.tm/messages/${id}`, {
-          method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+      } catch (error) {
+        console.warn('Could not open email:', error);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: 'Could not open this email',
+          showConfirmButton: false,
+          timer: 2200
         });
-        fetchInbox();
-        Swal.fire({toast:true,position:'top',icon:'success',title:'Email deleted',showConfirmButton:false,timer:1200});
-      } catch (e) {
-        Swal.fire('Error', 'Could not delete email.', 'error');
       }
     }
+
+    async function clearInbox() {
+      if (!token) return;
+
+      const result = await Swal.fire({
+        title: 'Clear inbox?',
+        text: 'This will permanently delete all messages in this temporary inbox.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Clear inbox',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        const response = await fetchWithTimeout(`${API_BASE}/api/inbox`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json'
+          }
+        });
+
+        await readJson(response);
+        await fetchInbox(false);
+
+        Swal.fire({
+          toast: true,
+          position: 'top',
+          icon: 'success',
+          title: 'Inbox cleared',
+          showConfirmButton: false,
+          timer: 1400
+        });
+      } catch (error) {
+        console.warn('Could not clear inbox:', error);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: 'Could not clear inbox',
+          showConfirmButton: false,
+          timer: 2200
+        });
+      }
+    }
+
     function closeModal() {
       document.getElementById('modal').style.display = 'none';
+      document.getElementById('modal-content').innerHTML = '';
     }
+
     function copyEmail() {
       if (!emailAddress) return;
-      navigator.clipboard.writeText(emailAddress);
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copied to clipboard!', showConfirmButton: false, timer: 1800 });
+
+      const showCopied = () => Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Copied to clipboard!',
+        showConfirmButton: false,
+        timer: 1800
+      });
+
+      const showCopyFailure = () => Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'Copy failed — please copy manually',
+        showConfirmButton: false,
+        timer: 2200
+      });
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(emailAddress).then(showCopied).catch(showCopyFailure);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = emailAddress;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showCopied();
+        } catch (_) {
+          showCopyFailure();
+        } finally {
+          textarea.remove();
+        }
+      }
     }
+
     generateEmail();
-    setInterval(fetchInbox, 12000);
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeModal();
     });
