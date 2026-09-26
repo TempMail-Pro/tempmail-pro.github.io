@@ -993,12 +993,13 @@ body.dark .sponsor-content p {
     };
 
     // ===== Temporary Email API =====
-    // TempMailPortal is a free, keyless, CORS-enabled API intended for browser use.
-    const API_BASE = 'https://api.tempmailportal.com';
+    // GrabMail: free, keyless, CORS-enabled public mailbox API.
+    // Public addresses are readable by anyone who knows the address.
+    const API_BASE = 'https://grabmail.io/api/v1';
+    const MAIL_DOMAIN = 'grabmail.io';
     const REQUEST_TIMEOUT_MS = 15000;
-    const POLL_INTERVAL_MS = 10000;
+    const POLL_INTERVAL_MS = 12000;
 
-    let token = '';
     let emailAddress = '';
     let polling = false;
     let generating = false;
@@ -1034,6 +1035,7 @@ body.dark .sponsor-content p {
 
     function scheduleNextPoll() {
       stopPollingTimer();
+      if (!emailAddress) return;
       pollTimer = setTimeout(async () => {
         await fetchInbox(true);
         scheduleNextPoll();
@@ -1044,7 +1046,7 @@ body.dark .sponsor-content p {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
       try {
-        return await fetch(url, { ...options, signal: controller.signal });
+        return await fetch(url, { ...options, signal: controller.signal, cache: 'no-store' });
       } finally {
         clearTimeout(timeoutId);
       }
@@ -1059,26 +1061,37 @@ body.dark .sponsor-content p {
       }
 
       if (!response.ok) {
-        const apiMessage = data && typeof data.error === 'string' ? data.error : '';
-        const error = new Error(apiMessage || `HTTP ${response.status}`);
+        const error = new Error(
+          data && typeof data.message === 'string'
+            ? data.message
+            : `HTTP ${response.status}`
+        );
         error.status = response.status;
+        error.payload = data;
         throw error;
       }
       return data;
+    }
+
+    function makeLocalPart() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return `tm-${window.crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+      }
+      const bytes = new Uint8Array(10);
+      window.crypto.getRandomValues(bytes);
+      return 'tm-' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
     }
 
     function sanitizeEmailHtml(html) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(String(html || ''), 'text/html');
 
-      // Remove active / navigational elements that should never execute inside the page.
       doc.querySelectorAll('script, iframe, object, embed, form, input, textarea, button, base, meta, link, video, audio').forEach(el => el.remove());
 
-      // Remove inline event handlers and unsafe URLs.
       doc.querySelectorAll('*').forEach(el => {
         [...el.attributes].forEach(attr => {
           const name = attr.name.toLowerCase();
-          const value = attr.value.trim().toLowerCase();
+          const value = attr.value.trim();
           if (name.startsWith('on')) el.removeAttribute(attr.name);
           if ((name === 'href' || name === 'src' || name === 'action') && /^(javascript:|vbscript:|data:text\/html)/i.test(value)) {
             el.removeAttribute(attr.name);
@@ -1094,29 +1107,56 @@ body.dark .sponsor-content p {
       return doc.body.innerHTML || '<p>No content available.</p>';
     }
 
+    function renderMessageList(messages) {
+      const inboxContainer = document.getElementById('emails');
+      inboxContainer.innerHTML = '';
+
+      if (!messages.length) {
+        inboxContainer.innerHTML = '<i>No emails received yet. Try refreshing.</i>';
+        return;
+      }
+
+      messages.forEach(message => {
+        if (!message || !message.id) return;
+
+        const item = document.createElement('div');
+        item.className = 'email-item';
+
+        const sender = typeof message.from === 'string' ? message.from : 'Unknown sender';
+        const subject = typeof message.subject === 'string' && message.subject.trim() ? message.subject : '(No subject)';
+        const received = message.date ? new Date(message.date).toLocaleString() : '';
+
+        item.innerHTML = `
+          <div style="font-size:16px;"><strong>From:</strong> ${escapeHtml(sender)}</div>
+          <div style="font-weight:600;margin-top:2px;">${escapeHtml(subject)}</div>
+          <div class="email-meta">${escapeHtml(received)}</div>
+        `;
+
+        item.tabIndex = 0;
+        item.setAttribute('role', 'button');
+        item.setAttribute('aria-label', `Open email from ${sender}`);
+        item.onclick = () => readEmail(message.id);
+        item.onkeydown = e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            readEmail(message.id);
+          }
+        };
+
+        inboxContainer.appendChild(item);
+      });
+    }
+
     async function generateEmail() {
       if (generating) return;
       generating = true;
       stopPollingTimer();
-      token = '';
       emailAddress = '';
       startLoading();
 
       try {
-        // POST /api/inbox returns { address, token } and needs no API key.
-        const response = await fetchWithTimeout(`${API_BASE}/api/inbox`, {
-          method: 'POST',
-          headers: { 'Accept': 'application/json' }
-        });
-
-        const data = await readJson(response);
-
-        if (!data || typeof data.address !== 'string' || typeof data.token !== 'string') {
-          throw new Error('Invalid inbox response');
-        }
-
-        emailAddress = data.address;
-        token = data.token;
+        // GrabMail public addresses are generated locally; the mailbox exists when mail arrives.
+        emailAddress = `${makeLocalPart()}@${MAIL_DOMAIN}`;
         document.getElementById('email').innerText = emailAddress;
 
         try {
@@ -1127,13 +1167,15 @@ body.dark .sponsor-content p {
           console.warn('QR code error:', qrError);
         }
 
-        await fetchInbox(false);
+        // Verify the API/browser connection with the new address.
+        await fetchInbox(false, true);
         scheduleNextPoll();
       } catch (error) {
         console.warn('Temporary email service unavailable:', error);
         document.getElementById('email').innerText = 'Tap Change to try again';
         document.getElementById('qrcode').innerHTML = '';
         showStatus('Temporary email is temporarily unavailable. Please try again in a moment.');
+        emailAddress = '';
       } finally {
         generating = false;
       }
@@ -1143,72 +1185,25 @@ body.dark .sponsor-content p {
       document.getElementById('emails').innerHTML = '<div class="shimmer"></div><div class="shimmer"></div>';
     }
 
-    async function fetchInbox(silent = false) {
-      if (!token || polling || generating) return;
+    async function fetchInbox(silent = false, force = false) {
+      if (!emailAddress || polling || (!force && generating)) return;
       polling = true;
 
       if (!silent) shimmerInbox();
 
       try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/messages`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json'
-          }
-        });
+        const response = await fetchWithTimeout(
+          `${API_BASE}/mailbox?address=${encodeURIComponent(emailAddress)}&limit=50`,
+          { headers: { Accept: 'application/json' } }
+        );
 
-        const emails = await readJson(response);
-
-        if (!Array.isArray(emails)) throw new Error('Invalid inbox response');
-
-        const inboxContainer = document.getElementById('emails');
-        inboxContainer.innerHTML = '';
-
-        if (!emails.length) {
-          inboxContainer.innerHTML = '<i>No emails received yet. Try refreshing.</i>';
-          return;
-        }
-
-        emails.forEach(email => {
-          if (!email || !email.id) return;
-
-          const item = document.createElement('div');
-          item.className = 'email-item';
-
-          const sender = typeof email.from === 'string' ? email.from : 'Unknown sender';
-          const subject = typeof email.subject === 'string' && email.subject.trim() ? email.subject : '(No subject)';
-          const received = email.date ? new Date(email.date).toLocaleString() : '';
-          const intro = typeof email.intro === 'string' ? email.intro : '';
-
-          item.innerHTML = `
-            <div style="font-size:16px;"><strong>From:</strong> ${escapeHtml(sender)}</div>
-            <div style="font-weight:600;margin-top:2px;">${escapeHtml(subject)}</div>
-            <div class="email-meta">${escapeHtml(received)}${intro ? ` · ${escapeHtml(intro)}` : ''}</div>
-          `;
-
-          item.tabIndex = 0;
-          item.setAttribute('role', 'button');
-          item.setAttribute('aria-label', `Open email from ${sender}`);
-          item.onclick = () => readEmail(email.id);
-          item.onkeydown = e => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              readEmail(email.id);
-            }
-          };
-
-          inboxContainer.appendChild(item);
-        });
+        const data = await readJson(response);
+        const messages = Array.isArray(data?.messages) ? data.messages : [];
+        renderMessageList(messages);
       } catch (error) {
         console.warn('Inbox refresh failed:', error);
-        if (error && error.status === 401) {
-          token = '';
-          emailAddress = '';
-          stopPollingTimer();
-          document.getElementById('email').innerText = 'Session expired';
-          showStatus('This temporary inbox is no longer available. Tap Change to create a new one.');
-        } else if (!silent) {
-          showStatus('The inbox could not be refreshed right now. Please try again.');
+        if (!silent) {
+          showStatus('The inbox could not be loaded right now. Please try again.');
         }
       } finally {
         polling = false;
@@ -1216,15 +1211,13 @@ body.dark .sponsor-content p {
     }
 
     async function readEmail(id) {
-      if (!token || !id) return;
+      if (!emailAddress || !id) return;
 
       try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/messages/${encodeURIComponent(id)}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json'
-          }
-        });
+        const response = await fetchWithTimeout(
+          `${API_BASE}/message/${encodeURIComponent(id)}?mailbox=${encodeURIComponent(emailAddress)}`,
+          { headers: { Accept: 'application/json' } }
+        );
 
         const data = await readJson(response);
         const subject = typeof data.subject === 'string' && data.subject.trim() ? data.subject : '(No subject)';
@@ -1275,11 +1268,11 @@ body.dark .sponsor-content p {
     }
 
     async function clearInbox() {
-      if (!token) return;
+      if (!emailAddress) return;
 
       const result = await Swal.fire({
         title: 'Clear inbox?',
-        text: 'This will permanently delete all messages in this temporary inbox.',
+        text: 'This will permanently delete all messages currently in this temporary inbox.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Clear inbox',
@@ -1289,17 +1282,23 @@ body.dark .sponsor-content p {
       if (!result.isConfirmed) return;
 
       try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/inbox`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json'
-          }
-        });
+        const response = await fetchWithTimeout(
+          `${API_BASE}/mailbox?address=${encodeURIComponent(emailAddress)}`,
+          { method: 'GET', headers: { Accept: 'application/json' } }
+        );
+        const data = await readJson(response);
+        const messages = Array.isArray(data?.messages) ? data.messages : [];
 
-        await readJson(response);
-        await fetchInbox(false);
+        for (const message of messages) {
+          if (!message?.id) continue;
+          const deleteResponse = await fetchWithTimeout(
+            `${API_BASE}/message/${encodeURIComponent(message.id)}?mailbox=${encodeURIComponent(emailAddress)}`,
+            { method: 'DELETE', headers: { Accept: 'application/json' } }
+          );
+          await readJson(deleteResponse);
+        }
 
+        await fetchInbox(false, true);
         Swal.fire({
           toast: true,
           position: 'top',
